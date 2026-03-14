@@ -22,15 +22,55 @@ export default async function PatientPage({
   }
 
   const supabase = await createClient();
-  const { data: patient, error } = await supabase
-    .from("patients")
-    .select("id, first_name, last_name, phone, email, city, address, insurance_name, notes")
-    .eq("id", Number(id))
-    .single();
+  const [{ data: patient, error }, appointmentsRes, proceduresRes, paymentsRes] = await Promise.all([
+    supabase
+      .from("patients")
+      .select("id, first_name, last_name, phone, email, city, address, insurance_name, notes")
+      .eq("id", Number(id))
+      .single(),
+    supabase
+      .from("appointments")
+      .select("id, starts_at, status")
+      .eq("patient_id", Number(id))
+      .order("starts_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("clinical_procedures")
+      .select("id, procedure_name, created_at, status")
+      .eq("patient_id", Number(id))
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("payments")
+      .select("id, amount, paid_at")
+      .eq("patient_id", Number(id))
+      .order("paid_at", { ascending: false })
+      .limit(5),
+  ]);
 
   if (error || !patient) {
     notFound();
   }
+
+  const timeline = [
+    ...((appointmentsRes.data ?? []).map((a) => ({
+      type: "RDV",
+      date: a.starts_at,
+      label: `Rendez-vous (${a.status})`,
+    })) as Array<{ type: string; date: string; label: string }>),
+    ...((proceduresRes.data ?? []).map((p) => ({
+      type: "Acte",
+      date: p.created_at,
+      label: `${p.procedure_name} (${p.status})`,
+    })) as Array<{ type: string; date: string; label: string }>),
+    ...((paymentsRes.data ?? []).map((p) => ({
+      type: "Paiement",
+      date: p.paid_at,
+      label: `${p.amount} CFA encaissé`,
+    })) as Array<{ type: string; date: string; label: string }>),
+  ]
+    .sort((a, b) => +new Date(b.date) - +new Date(a.date))
+    .slice(0, 12);
 
   return (
     <div className="space-y-5">
@@ -52,6 +92,25 @@ export default async function PatientPage({
       <div className="rounded-lg border p-3">
         <p className="mb-1 text-sm font-medium">Notes</p>
         <p className="text-sm text-slate-700">{patient.notes || "Aucune note."}</p>
+      </div>
+
+      <div className="rounded-lg border p-3">
+        <p className="mb-2 text-sm font-medium">Timeline patient (RDV / Actes / Paiements)</p>
+        <div className="space-y-2">
+          {timeline.length === 0 ? (
+            <p className="text-sm text-slate-500">Aucun événement récent.</p>
+          ) : (
+            timeline.map((item, idx) => (
+              <div key={`${item.type}-${idx}`} className="rounded-md bg-slate-50 px-3 py-2 text-sm">
+                <span className="mr-2 inline-block rounded bg-slate-200 px-2 py-0.5 text-xs">{item.type}</span>
+                {item.label}
+                <span className="ml-2 text-xs text-slate-500">
+                  {new Date(item.date).toLocaleString("fr-FR")}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
