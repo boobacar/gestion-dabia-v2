@@ -7,6 +7,7 @@ const nav = [
   ["Rendez-Vous", "/appointments"],
   ["Réservation en ligne", "/online-appointments"],
   ["Patients", "/patients"],
+  ["Salle d'attente", "/waiting-room"],
   ["Charges", "/expenses"],
   ["Chéques", "/cheques"],
   ["Rappels", "/notes"],

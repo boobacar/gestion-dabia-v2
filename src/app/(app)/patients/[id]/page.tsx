@@ -55,6 +55,7 @@ export default async function PatientPage({
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <QuickLink href={`/appointments?patient_id=${id}`} label="Nouveau RDV" />
         <QuickLink href={`/patients/${id}/appointments`} label="Rendez-vous" />
         <QuickLink href={`/patients/${id}/procedures`} label="Actes" />
         <QuickLink href={`/patients/${id}/payments`} label="Paiements" />
