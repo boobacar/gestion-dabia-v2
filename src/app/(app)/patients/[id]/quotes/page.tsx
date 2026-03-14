@@ -80,6 +80,9 @@ export default async function PatientQuotesPage({
                     <a href={`/api/pdf/quote/${plan.id}`} target="_blank" className="rounded border px-2 py-1">
                       Aperçu
                     </a>
+                    <a href={`/api/pdfbin/quote/${plan.id}`} className="rounded border px-2 py-1">
+                      Télécharger PDF
+                    </a>
                     <form action={generateQuotePdfDocumentAction}>
                       <input type="hidden" name="patient_id" value={id} />
                       <input type="hidden" name="treatment_plan_id" value={plan.id} />

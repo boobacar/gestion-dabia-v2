@@ -12,10 +12,37 @@ export async function saveClinicProfileAction(formData: FormData) {
   const phone = String(formData.get("phone") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const footer_note = String(formData.get("footer_note") ?? "").trim();
-  const logo_url = String(formData.get("logo_url") ?? "").trim();
-  const signature_url = String(formData.get("signature_url") ?? "").trim();
+  let logo_url = String(formData.get("logo_url") ?? "").trim();
+  let signature_url = String(formData.get("signature_url") ?? "").trim();
+
+  const logo_file = formData.get("logo_file");
+  const signature_file = formData.get("signature_file");
 
   const supabase = await createClient();
+
+  if (logo_file instanceof File && logo_file.size > 0) {
+    const filePath = `logo-${Date.now()}-${logo_file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("branding")
+      .upload(filePath, logo_file, { upsert: true, contentType: logo_file.type || "image/png" });
+
+    if (!uploadError) {
+      const { data } = supabase.storage.from("branding").getPublicUrl(filePath);
+      logo_url = data.publicUrl;
+    }
+  }
+
+  if (signature_file instanceof File && signature_file.size > 0) {
+    const filePath = `signature-${Date.now()}-${signature_file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("branding")
+      .upload(filePath, signature_file, { upsert: true, contentType: signature_file.type || "image/png" });
+
+    if (!uploadError) {
+      const { data } = supabase.storage.from("branding").getPublicUrl(filePath);
+      signature_url = data.publicUrl;
+    }
+  }
   const { data: first } = await supabase
     .from("clinic_profile")
     .select("id")

@@ -81,9 +81,12 @@ export default async function PatientInvoicesPage({
                     <a
                       href={`/api/pdf/invoice/${r.id}`}
                       target="_blank"
-                      className="inline-block rounded-md border px-2 py-1"
+                      className="inline-block rounded-md border px-2 py-1 mr-2"
                     >
                       Aperçu
+                    </a>
+                    <a href={`/api/pdfbin/invoice/${r.id}`} className="inline-block rounded-md border px-2 py-1">
+                      Télécharger PDF
                     </a>
                     <form action={generateInvoicePdfDocumentAction}>
                       <input type="hidden" name="patient_id" value={id} />
