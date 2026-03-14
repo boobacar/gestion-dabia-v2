@@ -46,6 +46,28 @@ export async function updateAppointmentStatusAction(formData: FormData) {
   revalidatePath("/appointments");
 }
 
+export async function queueReminderAction(formData: FormData) {
+  if (!hasSupabaseEnv()) throw new Error("Configure Supabase (.env.local).");
+
+  const appointment_id = Number(formData.get("appointment_id"));
+  const patient_id = Number(formData.get("patient_id"));
+  const message = String(formData.get("message") ?? "").trim();
+
+  if (!appointment_id || !patient_id || !message) throw new Error("Paramètres invalides.");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("message_logs").insert({
+    appointment_id,
+    patient_id,
+    channel: "whatsapp",
+    message,
+    status: "queued",
+  });
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/appointments");
+}
+
 export async function addToWaitingRoomAction(formData: FormData) {
   if (!hasSupabaseEnv()) throw new Error("Configure Supabase (.env.local).");
 

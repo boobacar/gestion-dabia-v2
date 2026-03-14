@@ -3,8 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import {
   addToWaitingRoomAction,
   createAppointmentAction,
+  queueReminderAction,
   updateAppointmentStatusAction,
 } from "./actions";
+import { AppointmentsCalendar } from "./calendar";
 
 type AppointmentRow = {
   id: number;
@@ -43,6 +45,13 @@ export default async function AppointmentsPage({
     patients = patientsRes.data ?? [];
   }
 
+  const calendarEvents = appointments.map((a) => ({
+    id: String(a.id),
+    title: a.patients ? `${a.patients.first_name} ${a.patients.last_name}` : `Patient #${a.patient_id}`,
+    start: a.starts_at,
+    end: a.ends_at,
+  }));
+
   return (
     <div className="space-y-6">
       <div>
@@ -69,6 +78,8 @@ export default async function AppointmentsPage({
         <input name="reason" placeholder="Motif" className="rounded-md border px-3 py-2" />
         <button className="rounded-md bg-slate-900 px-4 py-2 text-white md:col-span-5">Ajouter RDV</button>
       </form>
+
+      <AppointmentsCalendar events={calendarEvents} />
 
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
@@ -109,11 +120,21 @@ export default async function AppointmentsPage({
                       <button className="rounded-md border px-2 py-1">OK</button>
                     </form>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 space-y-2">
                     <form action={addToWaitingRoomAction}>
                       <input type="hidden" name="appointment_id" value={a.id} />
                       <input type="hidden" name="patient_id" value={a.patient_id} />
                       <button className="rounded-md border px-2 py-1">Salle d’attente</button>
+                    </form>
+                    <form action={queueReminderAction}>
+                      <input type="hidden" name="appointment_id" value={a.id} />
+                      <input type="hidden" name="patient_id" value={a.patient_id} />
+                      <input
+                        type="hidden"
+                        name="message"
+                        value={`Rappel RDV: ${a.patients ? `${a.patients.first_name} ${a.patients.last_name}` : `Patient #${a.patient_id}`} le ${new Date(a.starts_at).toLocaleString("fr-FR")}`}
+                      />
+                      <button className="rounded-md border px-2 py-1">Rappel</button>
                     </form>
                   </td>
                 </tr>
