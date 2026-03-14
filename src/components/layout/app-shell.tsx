@@ -1,3 +1,4 @@
+import { signOutAction } from "@/app/(app)/actions";
 import Link from "next/link";
 import { ReactNode } from "react";
 
@@ -23,11 +24,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           <h1 className="mb-4 text-lg font-semibold">Gestion Dabia v2</h1>
           <nav className="space-y-2">
             {nav.map(([label, href]) => (
-              <Link key={href} href={href} className="block rounded-md px-3 py-2 text-sm hover:bg-slate-100">
+              <Link
+                key={href}
+                href={href}
+                className="block rounded-md px-3 py-2 text-sm hover:bg-slate-100"
+              >
                 {label}
               </Link>
             ))}
           </nav>
+          <form action={signOutAction} className="mt-6">
+            <button className="w-full rounded-md border px-3 py-2 text-sm hover:bg-slate-100">
+              Déconnexion
+            </button>
+          </form>
         </aside>
         <main className="rounded-xl border bg-white p-6">{children}</main>
       </div>
