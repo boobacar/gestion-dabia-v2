@@ -14,13 +14,19 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
   if (error || !plan) return new Response("Devis introuvable", { status: 404 });
 
-  const [{ data: patient }, { data: items }] = await Promise.all([
+  const [{ data: patient }, { data: items }, { data: clinic }] = await Promise.all([
     supabase.from("patients").select("first_name, last_name").eq("id", plan.patient_id).single(),
     supabase
       .from("treatment_plan_items")
       .select("label, amount, status")
       .eq("treatment_plan_id", plan.id)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("clinic_profile")
+      .select("name, address, phone, email, footer_note")
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const rows = items ?? [];
@@ -30,17 +36,19 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     .map((r) => `<tr><td>${r.label}</td><td>${r.amount} CFA</td><td>${r.status}</td></tr>`)
     .join("");
 
+  const clinicName = clinic?.name || "Clinique Dentaire Dabia";
+  const quoteRef = `DEV-${new Date(plan.created_at).getFullYear()}-${String(plan.id).padStart(4, "0")}`;
+
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"/><title>Devis ${plan.title}</title>
-<style>body{font-family:Arial,sans-serif;margin:40px;color:#111}h1{margin:0 0 8px}table{width:100%;border-collapse:collapse;margin-top:18px}td,th{border:1px solid #ddd;padding:8px;text-align:left}.muted{color:#666;font-size:12px}</style>
+<style>body{font-family:Arial,sans-serif;margin:40px;color:#111}h1{margin:0 0 8px}.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}table{width:100%;border-collapse:collapse;margin-top:18px}td,th{border:1px solid #ddd;padding:8px;text-align:left}.muted{color:#666;font-size:12px}.footer{margin-top:24px;padding-top:12px;border-top:1px solid #ddd}</style>
 </head><body>
-<h1>Clinique Dentaire Dabia — Devis</h1>
-<p><strong>Titre:</strong> ${plan.title}</p>
+<div class="head"><div><h1>${clinicName} — Devis ${quoteRef}</h1><p><strong>Titre:</strong> ${plan.title}</p></div><div class="muted">${clinic?.address || ""}<br/>${clinic?.phone || ""}<br/>${clinic?.email || ""}</div></div>
 <p><strong>Patient:</strong> ${patient ? `${patient.first_name} ${patient.last_name}` : `#${plan.patient_id}`}</p>
 <p class="muted">Date: ${new Date(plan.created_at).toLocaleDateString("fr-FR")}</p>
 <table><tr><th>Acte</th><th>Montant</th><th>Statut</th></tr>${tableRows}</table>
 <p><strong>Total:</strong> ${total} CFA</p>
-<p class="muted">Imprimer via Ctrl/Cmd+P pour PDF.</p>
+<div class="footer"><p class="muted">${clinic?.footer_note || "Imprimer via Ctrl/Cmd+P pour PDF."}</p></div>
 </body></html>`;
 
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });

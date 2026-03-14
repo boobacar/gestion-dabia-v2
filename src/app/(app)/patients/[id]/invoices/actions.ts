@@ -16,9 +16,24 @@ export async function createInvoiceAction(formData: FormData) {
   if (!patient_id || amount <= 0) throw new Error("Montant facture invalide.");
 
   const supabase = await createClient();
+
+  let finalCode = code;
+  if (!finalCode) {
+    const year = new Date().getFullYear();
+    const prefix = `FAC-${year}-`;
+    const { count } = await supabase
+      .from("invoices")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", `${year}-01-01`)
+      .lt("created_at", `${year + 1}-01-01`);
+
+    const seq = String((count ?? 0) + 1).padStart(4, "0");
+    finalCode = `${prefix}${seq}`;
+  }
+
   const { error } = await supabase.from("invoices").insert({
     patient_id,
-    code: code || null,
+    code: finalCode,
     amount,
     paid_amount: 0,
     status: "draft",
