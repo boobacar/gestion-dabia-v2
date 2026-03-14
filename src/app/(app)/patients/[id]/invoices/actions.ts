@@ -31,3 +31,32 @@ export async function createInvoiceAction(formData: FormData) {
   revalidatePath(`/patients/${patient_id}/payments`);
   revalidatePath(`/patients/${patient_id}`);
 }
+
+export async function generateInvoicePdfDocumentAction(formData: FormData) {
+  if (!hasSupabaseEnv()) throw new Error("Configure Supabase (.env.local).");
+
+  const patient_id = Number(formData.get("patient_id"));
+  const invoice_id = Number(formData.get("invoice_id"));
+  if (!patient_id || !invoice_id) throw new Error("Paramètres invalides.");
+
+  const supabase = await createClient();
+  const { data: invoice } = await supabase
+    .from("invoices")
+    .select("id, code")
+    .eq("id", invoice_id)
+    .single();
+
+  const title = `Facture ${invoice?.code || `#${invoice_id}`}`;
+
+  const { error } = await supabase.from("documents").insert({
+    patient_id,
+    invoice_id,
+    type: "invoice",
+    title,
+    note: `PDF prêt impression: /api/pdf/invoice/${invoice_id}`,
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/patients/${patient_id}/invoices`);
+  revalidatePath(`/patients/${patient_id}/documents`);
+}

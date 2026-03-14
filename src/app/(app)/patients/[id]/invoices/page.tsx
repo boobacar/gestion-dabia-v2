@@ -1,6 +1,6 @@
 import { hasSupabaseEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
-import { createInvoiceAction } from "./actions";
+import { createInvoiceAction, generateInvoicePdfDocumentAction } from "./actions";
 
 type InvoiceRow = {
   id: number;
@@ -58,12 +58,13 @@ export default async function PatientInvoicesPage({
               <th className="px-3 py-2">Reçu</th>
               <th className="px-3 py-2">Reste</th>
               <th className="px-3 py-2">Statut</th>
+              <th className="px-3 py-2">PDF</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-3 text-slate-500">
+                <td colSpan={7} className="px-3 py-3 text-slate-500">
                   Aucune facture.
                 </td>
               </tr>
@@ -76,6 +77,20 @@ export default async function PatientInvoicesPage({
                   <td className="px-3 py-2">{r.paid_amount}</td>
                   <td className="px-3 py-2">{Math.max(0, Number(r.amount) - Number(r.paid_amount))}</td>
                   <td className="px-3 py-2">{r.status}</td>
+                  <td className="px-3 py-2 space-y-2">
+                    <a
+                      href={`/api/pdf/invoice/${r.id}`}
+                      target="_blank"
+                      className="inline-block rounded-md border px-2 py-1"
+                    >
+                      Aperçu
+                    </a>
+                    <form action={generateInvoicePdfDocumentAction}>
+                      <input type="hidden" name="patient_id" value={id} />
+                      <input type="hidden" name="invoice_id" value={r.id} />
+                      <button className="rounded-md border px-2 py-1">Ajouter aux documents</button>
+                    </form>
+                  </td>
                 </tr>
               ))
             )}

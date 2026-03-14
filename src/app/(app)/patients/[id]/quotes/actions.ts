@@ -44,6 +44,32 @@ export async function createTreatmentPlanItemAction(formData: FormData) {
   revalidatePath(`/patients/${patient_id}/quotes`);
 }
 
+export async function generateQuotePdfDocumentAction(formData: FormData) {
+  if (!hasSupabaseEnv()) throw new Error("Configure Supabase (.env.local).");
+
+  const patient_id = Number(formData.get("patient_id"));
+  const treatment_plan_id = Number(formData.get("treatment_plan_id"));
+  if (!patient_id || !treatment_plan_id) throw new Error("Paramètres invalides.");
+
+  const supabase = await createClient();
+  const { data: plan } = await supabase
+    .from("treatment_plans")
+    .select("id, title")
+    .eq("id", treatment_plan_id)
+    .single();
+
+  const { error } = await supabase.from("documents").insert({
+    patient_id,
+    type: "quote",
+    title: `Devis ${plan?.title || `Plan #${treatment_plan_id}`}`,
+    note: `PDF prêt impression: /api/pdf/quote/${treatment_plan_id}`,
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/patients/${patient_id}/quotes`);
+  revalidatePath(`/patients/${patient_id}/documents`);
+}
+
 export async function updateTreatmentPlanItemStatusAction(formData: FormData) {
   if (!hasSupabaseEnv()) throw new Error("Configure Supabase (.env.local).");
 

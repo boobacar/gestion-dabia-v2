@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   createTreatmentPlanAction,
   createTreatmentPlanItemAction,
+  generateQuotePdfDocumentAction,
   updateTreatmentPlanItemStatusAction,
 } from "./actions";
 
@@ -73,9 +74,17 @@ export default async function PatientQuotesPage({
                     <p className="font-medium">{plan.title}</p>
                     <p className="text-xs text-slate-500">{new Date(plan.created_at).toLocaleString("fr-FR")}</p>
                   </div>
-                  <div className="text-sm">
-                    <span className="mr-2 rounded bg-slate-100 px-2 py-1">Total: {total} CFA</span>
+                  <div className="text-sm flex items-center gap-2">
+                    <span className="rounded bg-slate-100 px-2 py-1">Total: {total} CFA</span>
                     <span className="rounded bg-slate-100 px-2 py-1">Progression: {progress}%</span>
+                    <a href={`/api/pdf/quote/${plan.id}`} target="_blank" className="rounded border px-2 py-1">
+                      Aperçu
+                    </a>
+                    <form action={generateQuotePdfDocumentAction}>
+                      <input type="hidden" name="patient_id" value={id} />
+                      <input type="hidden" name="treatment_plan_id" value={plan.id} />
+                      <button className="rounded border px-2 py-1">Ajouter aux documents</button>
+                    </form>
                   </div>
                 </div>
 
