@@ -23,7 +23,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       .order("created_at", { ascending: true }),
     supabase
       .from("clinic_profile")
-      .select("name, address, phone, email, footer_note")
+      .select("name, address, phone, email, footer_note, logo_url, signature_url")
       .order("id", { ascending: true })
       .limit(1)
       .maybeSingle(),
@@ -41,13 +41,14 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"/><title>Devis ${plan.title}</title>
-<style>body{font-family:Arial,sans-serif;margin:40px;color:#111}h1{margin:0 0 8px}.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}table{width:100%;border-collapse:collapse;margin-top:18px}td,th{border:1px solid #ddd;padding:8px;text-align:left}.muted{color:#666;font-size:12px}.footer{margin-top:24px;padding-top:12px;border-top:1px solid #ddd}</style>
+<style>body{font-family:Arial,sans-serif;margin:40px;color:#111}h1{margin:0 0 8px}.head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.logo{max-height:58px;max-width:180px;display:block;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin-top:18px}td,th{border:1px solid #ddd;padding:8px;text-align:left}.muted{color:#666;font-size:12px}.footer{margin-top:24px;padding-top:12px;border-top:1px solid #ddd}.sign{margin-top:24px;text-align:right}.sign img{max-height:64px;max-width:180px;display:block;margin-left:auto}</style>
 </head><body>
-<div class="head"><div><h1>${clinicName} — Devis ${quoteRef}</h1><p><strong>Titre:</strong> ${plan.title}</p></div><div class="muted">${clinic?.address || ""}<br/>${clinic?.phone || ""}<br/>${clinic?.email || ""}</div></div>
+<div class="head"><div>${clinic?.logo_url ? `<img src="${clinic.logo_url}" class="logo" alt="logo"/>` : ""}<h1>${clinicName} — Devis ${quoteRef}</h1><p><strong>Titre:</strong> ${plan.title}</p></div><div class="muted">${clinic?.address || ""}<br/>${clinic?.phone || ""}<br/>${clinic?.email || ""}</div></div>
 <p><strong>Patient:</strong> ${patient ? `${patient.first_name} ${patient.last_name}` : `#${plan.patient_id}`}</p>
 <p class="muted">Date: ${new Date(plan.created_at).toLocaleDateString("fr-FR")}</p>
 <table><tr><th>Acte</th><th>Montant</th><th>Statut</th></tr>${tableRows}</table>
 <p><strong>Total:</strong> ${total} CFA</p>
+<div class="sign">${clinic?.signature_url ? `<img src="${clinic.signature_url}" alt="signature"/>` : ""}<p class="muted">Signature / Cachet</p></div>
 <div class="footer"><p class="muted">${clinic?.footer_note || "Imprimer via Ctrl/Cmd+P pour PDF."}</p></div>
 </body></html>`;
 
