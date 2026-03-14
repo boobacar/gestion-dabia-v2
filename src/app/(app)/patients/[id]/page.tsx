@@ -60,7 +60,18 @@ export default async function PatientPage({
         <QuickLink href={`/patients/${id}/procedures`} label="Actes" />
         <QuickLink href={`/patients/${id}/payments`} label="Paiements" />
         <QuickLink href={`/patients/${id}/quotes`} label="Devis" />
+        <QuickLink href={`/patients/${id}/waiting-room-visits`} label="Salle d'attente" />
         <QuickLink href={`/patients/${id}/documents`} label="Documents" />
+        {patient.phone ? (
+          <a href={`https://wa.me/${patient.phone.replace(/\D/g, "")}`} className="rounded-md border px-3 py-2 text-sm hover:bg-slate-100">
+            WhatsApp
+          </a>
+        ) : null}
+        {patient.email ? (
+          <a href={`mailto:${patient.email}`} className="rounded-md border px-3 py-2 text-sm hover:bg-slate-100">
+            Email
+          </a>
+        ) : null}
       </div>
     </div>
   );
